@@ -1,0 +1,52 @@
+extends layout
+
+block extra_headers
+	script(type='text/javascript', src="/js/rdflib.js")
+block content
+	.row.text-center
+		h1 Testing Object Creation
+	.row
+		div(class="col-md-12").section
+			form(role="form", action="")
+				.form-group
+					label(for="endpoint") Endpoint:
+					input(type="text", name="endpoint", class="form-control", id="endpoint")
+				ul.nav.nav-tabs
+					li.active: a(data-toggle="tab", href="#posttab") Add Post
+					li: a(data-toggle="tab", href="#imgtab") Upload Image
+					li: a(data-toggle="tab", href="#commenttab") Add Comment
+					li: a(data-toggle="tab", href="#liketab") Like Object
+
+				.tab-content
+					.tab-pane.fade.in.active(id="posttab")
+						h3 Create a Post
+						.form-group
+							label(for="pnote") Note:
+							input.form-control(type="text", name="pnote", id="postnote")
+						.form-group
+							label(for="pattachment") Attachment: 
+							input.form-control(type="text", name="pattachment", id="postattach")
+						.form-group
+							label(for="pcontent") Content:
+							textarea.form-control(rows="3", name="pcontent", id="postcontent")
+						button.btn.btn-default(type="submit", id="submitpost") Submit
+					.tab-pane.fade(id="imgtab")
+						h3 Upload Image
+						.form-group
+							label(for="source") Source:
+							input.form-control(type="text", name="source", id="imgsource")
+						button.btn.btn-default(type="submit", id="submitimg") Submit
+					.tab-pane.fade(id="commenttab")
+						h3 Comment on Resource
+						.form-group
+							label(for="cattachment") Attachment: 
+							input.form-control(type="text", name="cattachment", id="commentattach")
+						.form-group
+							label(for="ccontent") Content:
+							textarea.form-control(rows="3", name="ccontent", id="commentcontent")
+						button.btn.btn-default(type="submit", id="submitcomment") Submit
+					.tab-pane.fade(id="liketab")
+						h3 Like a Resource
+						button.btn.btn-default(type="submit", id="submitlike") Submit
+
+	script(type='text/javascript', src="/js/test.js")

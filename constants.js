@@ -1,0 +1,16 @@
+exports.APP_ID = "1464644210500554";
+exports.APP_SECRET = "cdd376081fe295750f8e956828d93474";
+exports.BASEURL = "http://local.happynchill.in:3000/";
+exports.TOKENS_DIR = "/home/henchill/ldconnect/";
+// exports.POST_RELATED_REGEX =
+// exports.PHOTO_RELATED_REGEX =
+exports.RELATED_REGEX = /\d+_?\d+_related$/;
+exports.PROFILE_REGEX = /^\/(?:me|\d+)$/;
+exports.ALBUMS_REGEX = /^\/(?:me|\d+)\/albums$/;
+exports.POSTS_REGEX = /^\/(?:me|\d+)\/posts$/;
+exports.POST_REGEX = /^\/(?:me|\d+)\/(?:posts|feed)\/(?:\d+_\d+$)/;
+exports.PHOTO_REGEX = /^\/(?:me|\d+)\/(?:photos\/\d+|albums\/\d+\/\d+)$/;
+exports.ALBUM_REGEX = /^\/(?:me|\d+)\/albums\/\d+$/;
+exports.PHOTOS_REGEX = /^\/(?:me|\d+)\/photos$/;
+exports.FRIENDS_REGEX = /^\/(?:me|\d+)\/friends$/;
+exports.FEED_REGEX = /^\/(?:me|\d+)\/feed$/;

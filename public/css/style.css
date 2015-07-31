@@ -1,0 +1,26 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+#error-message {
+	border: 2px solid #f00;
+	padding: 5px;
+	border-radius: 10px;
+	margin-top: 10px;
+}
+
+.section {
+	border: 2px solid #ddd;
+	padding: 5px;
+	border-radius: 15px;
+	margin-top: 10px;
+}
+
+#signup-btn {
+	margin-right: 10px;
+}

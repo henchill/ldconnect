@@ -1,0 +1,46 @@
+extends layout
+
+block content
+	if redirect
+		script(type='text-javascript').
+			window.location.href = redirect;
+
+	.row
+		div(class="col-md-6 col-md-offset-3", id="submission-form").section.text-center
+			form(role="form", action="")
+				h2 Connect Your Facebook Account
+				label
+					input(type="checkbox", name="scrape", id="scrape")
+					|  Scrape data if needed
+				br
+				div(id="logininfo" class="hidden")
+					.form-group 
+						label(for="email") Email Address:
+						input(type="email", name="email", class="form-control", id="email")
+					.form-group
+						label(for=password) Password:
+						input(type="password", name="password", class="form-control", id="password")
+				button(type="submit", class="btn btn-default" id="obtainaccesstoken") Submit
+
+	script(type='text/javascript').
+		$("#scrape").click(function() {
+			if (this.checked) {
+				$("#logininfo").removeClass("hidden");
+			} else {
+				$("#logininfo").addClass("hidden");
+			}
+		});
+		
+		$("#obtainaccesstoken").click(function(evt) {
+			evt.preventDefault();
+			var data = {};
+			if ($("#scrape").checked) {
+				data.email = $("#email").value;
+				data.password = $("#password").value;
+			}
+			$.post("/facebook_token", data, 
+				function(res) {
+					window.location.href = res.redirecturl;
+				}
+			);
+		});

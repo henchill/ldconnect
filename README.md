@@ -1,0 +1,17 @@
+xxx.crosscloud.org
+	/me
+		/albums
+			/album_id
+				/photo_id
+				/photo_id_related/
+		/feed
+			/post_id
+			/post_id_related/
+		/friends
+		/photos
+			/photo_id
+			/photo_id_related/
+		/posts
+			/post_id
+			/post_id_related/
+	/user_id

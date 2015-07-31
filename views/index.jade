@@ -1,0 +1,27 @@
+extends layout
+
+block extra_headers
+	link(rel="import" href="/bower_components/webid-login/webid-login.html")
+block content
+	.row
+		div(class="col-md-6 col-md-offset-3 section")
+			h1(class="text-center") Welcome to LDConnect
+			p LDConnect presents an RDF interface that allows you to browse facebook data. Begin by authenticating using webid.
+			if (!webid)
+				webid-login
+
+				script(type='text/javascript').
+					window.addEventListener('WebIDAuth', function(e) {
+						console.log(e);
+						$.post("/", { auth: e.detail.auth,
+									  success: e.detail.success,
+									  user: e.detail.user }, 
+							function(data) {
+								console.log("received response");
+								console.log(JSON.stringify(data));
+								//- window.location.href = data['redirect'];
+							}
+						);
+					});
+			if (webid)
+				p You are signed in as #{webid}

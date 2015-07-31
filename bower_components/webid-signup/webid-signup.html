@@ -1,0 +1,761 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../font-roboto/roboto.html">
+<link rel="import" href="../core-icon-button/core-icon-button.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-input/paper-input-decorator.html">
+<link rel="import" href="../paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-dropdown/paper-dropdown.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../core-menu/core-menu.html">
+<link rel="import" href="../core-label/core-label.html">
+<link rel="import" href="../core-ajax/core-ajax.html">
+<link rel="import" href="../core-overlay/core-overlay.html">
+<link rel="import" href="../core-transition/core-transition.html">
+
+<script src="rdflib.min.js"></script>
+
+<polymer-element name="webid-signup">
+  <template>
+    <style>
+    core-icon-button {
+      color: #3e50b4;
+    }
+    core-overlay {
+      background: #fff;
+      padding: 30px 42px;
+      margin: 0px 10px 0px 10px;
+      overflow: auto;
+    }
+    paper-checkbox {
+      margin-right: 10px;
+    }
+    .signup-header {
+      margin-bottom: 10px;
+    }
+    paper-button.bluecolored {
+      background: #4285f4;
+      color: #fff;
+    }
+    paper-button.greencolored {
+      background: #66BB6A;
+      color: #fff;
+    }
+    .greencolor {
+      color: #66BB6A;
+    }
+    .warning {
+      color: red;
+    }
+    polyfill-next-selector { content: '.signup-header h2'; }
+    #signup-header ::content h2 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 300;
+    }
+    #submit, #webidcheckbox {
+      margin-top: 10px;
+    }
+    paper-toggle-button {
+      margin-right: 10px;
+    }
+    paper-item {
+      min-width: 230px;
+    }
+    </style>
+
+    <!-- AJAX GOES HERE -->
+
+    <core-ajax id="ajax" url="" on-core-response="{{ajaxResponse}}" on-core-complete="{{ajaxDone}}"></core-ajax>
+
+    <!-- SIGNUP HEADER -->
+
+    <core-label id="signup-header" layout horizontal center>
+      <content select="h2"><h2>Signup for a WebID / Storage</h2></content>
+      <core-icon-button icon="help" on-tap="{{webidHelp}}" alt="Tell me more about WebID."></core-icon-button>
+    </core-label>
+
+    <!-- HELP OVERLAYS -->
+    <core-overlay id="webidhelp" backdrop="true">
+      <h2>What is a WebID?</h2>
+      <div>
+        <p>A WebID is a URL for you. It allows you to set up a public profile,
+        with friends, pictures and all kinds of things.</p>
+
+        <p>It works like having an account on a social networking site, but it
+        isn't restricted to just that site. It is very open because the information
+        can connect to other people, organizations and projects and so on, without
+        everyon having to join the same social networking site. All you need is
+        some place on the web where you can save a file to, and that is what storage
+        gives you. (<a href="http://www.w3.org/wiki/WebID" target="_blank">More 
+        information</a>)
+        </p>
+      </div>
+      <h2>What is storage?</h2>
+      <div>
+        <p>When you create a new account, you may also get storage space on the
+          selected server. The amount of available space can vary from server to
+          server. Additionally, a common list of workspaces (i.e. dedicated folders) 
+          maye be created by default, such as <i>Public</i>, <i>Private</i>, 
+          <i>Family</i>, <i>Work</i>, etc.</p>
+      </div>
+      <paper-button raised="" core-overlay-toggle aria-label="Close help overlay">Close</paper-button>
+    </core-overlay>
+    <core-overlay id="endpointshelp" backdrop="true">
+      <h2>What are servers?</h2>
+      <div>
+        <p>The servers in this list are used to generate your WebID, as well as to host your WebID profile. You should pick the one you like the best, or trust the most.</p>
+      </div>
+      <paper-button raised="" core-overlay-toggle aria-label="Close help overlay">Close</paper-button>
+    </core-overlay>
+
+    <!-- FORM FIELDS -->
+    <div id="okDialog" hidden>
+      <h2 class="greencolor">Success!</h2>
+      <div id="okAccount" hidden>
+        <p>
+          Your WebID was created successfully!
+        </p>
+      </div>
+      <div id="finish">
+        <p>Please click the button below to finish creating your account. You may be asked for your new certificate <em>twice</em>.</p>
+        <div id="warncert">
+          <p>Your new certificate should have the following name: <em><span id="certname"></span></em>.</p>
+          <p><span class="warning">Attention:</span> do not proceed unless your certificate was installed successfully.</p>
+        </div>
+        <div id="profilestatus"></div>
+        <paper-button id="finishlogin" raised="" role="button" class="greencolored" tabindex="0" center on-tap="{{prepareLogin}}">Finish</paper-button>
+      </div>
+      <div id="alldone" hidden>
+        <h2 class="greencolor">Storage account created!</h2>
+        <p>You can view it by visiting this URL:<br/>
+          <span id="accountUrl"></span>
+        </p>
+      </div>
+    </div>
+
+    <form id="accountform" method="post" target="spkac">
+      <div>
+        <core-label center horizontal layout id="webidcheckbox">
+          <paper-toggle-button id="haveWebID" class="blue" for="" role="checkbox" tabindex="0" aria-labelledby="webidcheckbox" on-tap="{{toggleWebID}}"></paper-toggle-button>I already have a WebID</span>
+        </core-label>
+        <keygen id="spkacWebID" name="spkac" challenge="randomchars" keytype="rsa" hidden>
+      </div>
+      <paper-input-decorator id="username" label="Preferred account name" floatinglabel="" error="Account name is required" layout="" vertical="">
+        <input is="core-input" name="username" required="" on-input="{{updateUsername}}">
+      </paper-input-decorator>
+      <paper-input-decorator id="fullname" label="Your full name" floatinglabel="" error="Full name is required" layout="" vertical="">
+        <input is="core-input" name="name" required="" on-input="{{updateName}}">
+      </paper-input-decorator>
+      <paper-input-decorator id="email" label="Email (used for recovery)" floatinglabel="" layout="" vertical="">
+        <input is="core-input" name="email">
+      </paper-input-decorator>
+      <paper-input-decorator id="img" label="Picture URL (optional)" floatinglabel="" layout="" vertical="">
+        <input is="core-input" name="img">
+      </paper-input-decorator>
+      Server: 
+      <core-label center horizontal>
+        <paper-dropdown-menu label="List of available servers">
+          <paper-dropdown class="dropdown" layered>
+            <core-menu class="menu" selected="{{selectedEndpoint}}">
+              <template repeat="{{s in servers}}">
+                <paper-item id="{{s.url}}">{{s.name}}</paper-item>
+              </template>
+            </core-menu>
+          </paper-dropdown>
+        </paper-dropdown-menu>
+        <core-icon-button icon="help" on-tap="{{endpointHelp}}" alt="What is this server?"></core-icon-button>
+      </core-label>
+
+      <div id="submit">
+        <paper-button id="check" raised="" class="bluecolored" role="button" tabindex="0" center on-tap="{{validateNew}}">Check</paper-button>
+        <paper-button id="create" raised="" class="greencolored" role="button" tabindex="0" center on-tap="{{createNew}}" hidden>Create!</paper-button>
+        <paper-button raised="" role="button" tabindex="0" center on-tap="{{clearAll}}">Clear</paper-button>
+      </div>
+      <iframe id="hiddenframe" name="spkac" hidden></iframe>
+    </form>
+  </template>
+
+  <!-- JAVASCRIPT -->
+
+  <script>
+    Polymer({
+      ajaxResponse: function(e, r) {
+        // Set form action url
+        if (typeof r.response.formURL != undefined && r.response.formURL.length > 0) {
+          this.$.accountform.action = r.response.formURL;
+        } else {
+          //@@TODO handle exception
+        }
+        
+        if (r.response.response.available === true) {
+          this.accountURI = r.response.response.accountURL;
+          this.$.username.isInvalid = false;
+          this.$.username.style.color = '#66BB6A';
+          this.$.check.hidden = true;
+          this.$.create.hidden = false;
+        } else {
+          this.$.username.error = "Account name already taken";
+          this.$.username.isInvalid = true;
+        }
+      },
+      ajaxDone: function() {
+        this.$.check.innerText = "Check";
+        this.$.create.innerText = "Create";
+      },
+      toggleWebID: function() {
+        if (this.$.haveWebID.checked === true) {
+          this.$.fullname.hidden = true;
+          this.$.email.hidden = true;
+          this.$.img.hidden = true;
+        } else {
+          this.$.fullname.hidden = false;
+          this.$.email.hidden = false;
+          this.$.img.hidden = false;
+        }
+      },
+      ready: function() {
+        self = this;
+        this.$.accountform.addEventListener('keypress', function(e) {
+          if (e.which == 13) {
+            self.validateNew();
+          }
+        });
+
+        this.servers = [
+          { name: "databox.me [recommended]", url: 'https://databox.me/,system/accountStatus' },
+          { name: "rww.io", url: 'https://rww.io/api/accountStatus' }
+        ];
+        this.selectedEndpoint = 0;
+        var url = this.getParam('endpointUrl');
+        // fetch list of endpoints
+        if (url.length > 0) {
+          var ep = { url: url };
+          if (getParam('endpointName').length > 0) {
+            ep.name = this.getParam('endpointName');
+          } else {
+            // get the hostname from endpoint
+            var l = document.createElement("a");
+            l.href = url;
+            ep.name = l.hostname;
+          }
+          this.servers.push(ep);
+          this.selectedEndpoint = this.servers.length - 1;
+        }
+        // get more endpoints
+      },
+      updateUsername: function(e) {
+        this.$.username.style.color = '#000';
+        this.validateEmptyUser();
+      },
+      updateName: function(e) {
+        this.validateEmptyName();
+      },
+      // Check if the account is available
+      validateNew: function() {
+        this.$.check.innerText = "Checking...";
+
+        var userOk = this.validateEmptyUser();
+        var nameOk = this.validateEmptyName();
+
+        if (userOk === true && nameOk === true) {
+          var data = {
+                method: "accountStatus",
+                accountName: this.$.username.querySelector('input').value
+              };
+
+          this.$.ajax.url = this.servers[this.selectedEndpoint].url;
+          this.$.ajax.method = 'POST';
+          this.$.ajax.handleAs = 'json';
+          this.$.ajax.contentType = 'application/json';
+          this.$.ajax.body = JSON.stringify(data);
+          this.$.ajax.go(); // call the API
+        } else {
+          this.ajaxDone();
+        }
+      },
+      // Claim account on server
+      createNew: function() {
+        this.$.create.innerText = "Creating...";
+
+        username = this.$.username.querySelector('input').value;
+        var fullname = this.$.fullname.querySelector('input').value;
+        var email = this.$.email.querySelector('input').value;
+        var img = this.$.img.querySelector('input').value;
+        if (this.$.haveWebID.checked) {
+          this.$.spkacWebID.remove();
+          this.$.warncert.hidden = true;
+        }
+
+        if (this.$.hiddenframe.addEventListener) {
+          this.$.hiddenframe.addEventListener("load", this.iframeLoaded, false);
+        } else {
+          this.$.hiddenframe.attachEvent("onload", this.iframeLoaded);
+        }
+
+        this.$.accountform.submit();
+
+        var isFF = 'MozAppearance' in document.documentElement.style;
+        if (isFF !== true) {
+          this.iframeLoaded();
+        }
+      },
+      iframeLoaded: function() {
+        if (!this.$) {
+          that = document.querySelector("webid-signup");
+        } else {
+          that = this;
+        }
+        that.$.accountform.hidden = true;
+        that.$.certname.innerHTML = that.$.fullname.querySelector('input').value;
+        that.$.accountUrl.innerHTML = '<a href="'+that.accountURI+'" target="_blank">'+that.accountURI+'</a>';
+
+        that.$.okDialog.hidden = false;
+        if (!that.$.haveWebID.checked) {
+          that.$.okAccount.hidden = false;
+        }
+      },
+      setFormToken: function() {
+        var webidToken = new Date().getTime();
+        this.$.webidToken.value = webidToken;
+        return webidToken;
+      },
+      validateEmptyUser: function() {
+        this.$.check.hidden = false;
+        this.$.create.hidden = true;
+        var user = this.$.username;
+        if (user) {
+          if (user.querySelector('input').validity.valid) {
+            user.isInvalid = false;
+          } else {
+            user.error = "Account name is required";
+            user.isInvalid = true;
+            return false;
+          }
+        } else {
+          console.log("Could not find: "+user);
+          return false;
+        }
+        return true;
+      },
+      validateEmptyName: function() {
+        var name = this.$.fullname;
+        if (name) {
+          if (name.querySelector('input').validity.valid) {
+            name.isInvalid = false;
+          } else if (this.$.haveWebID.checked === true) {
+            return true;
+          } else {
+            name.error = "Full name is required";
+            name.isInvalid = true;
+            return false;
+          }
+        } else {
+          console.log("Could not find: "+name);
+          return false;
+        }
+        return true;
+      },
+      prepareLogin: function() {
+        authWebID(this.accountURI, true);
+      },
+      clearAll: function() {
+        this.$.username.querySelector('input').value = "";
+        this.$.fullname.querySelector('input').value = "";
+        this.$.email.querySelector('input').value = "";
+        this.$.img.querySelector('input').value = "";
+      },
+      appendElement: function(elem, html) {
+        elem.insertAdjacentHTML('beforeend', html);
+      },
+      webidHelp: function() {
+        this.$.webidhelp.toggle();
+      },
+      endpointHelp: function() {
+        this.$.endpointshelp.toggle();
+      },
+      getParam: function(name) {
+        name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+name+"=([^&#]*)";
+        var regex = new RegExp(regexS);
+        var results = regex.exec(window.location.href);
+        if( results == null ) {
+          return "";
+        } else {
+          return decodeURIComponent(results[1]);
+        }
+      }
+    });
+
+    var PROXY = "https://rww.io/proxy?uri={uri}";
+
+    // add CORS proxy
+    $rdf.Fetcher.crossSiteProxyTemplate=PROXY;
+
+    var TIMEOUT = 90000;
+
+    var RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    var FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
+    var WAC = $rdf.Namespace("http://www.w3.org/ns/auth/acl#");
+    var WS = $rdf.Namespace("http://www.w3.org/ns/pim/space#");
+    var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
+
+    // list of default workspaces to be created
+    var workspaces = ['Preferences', 'Public', 'Private', 'Family', 'Friends', 'Work'];
+
+    // Authenticate user to find out the user's final WebID
+    // string account (https://user.rww.io/)
+    // bool   dom     (append info to dom)
+    function authWebID(account, dom) {
+      if (dom) {
+        var d = document.querySelector("webid-signup");
+      }
+      if (account.lastIndexOf('/') < 0 || account.lastIndexOf('/') < account.length - 1) {
+        account = account + '/';
+      }
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("HEAD", account, true);
+      xhr.withCredentials = true;
+      xhr.send();
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == xhr.DONE) {
+          if (xhr.status < 500) {
+            user = xhr.getResponseHeader('User');
+            if (user) {
+              // auth object
+              if (user.substr(0, 4) === 'http') {
+                if (dom) {
+                  d.appendElement(d.$.profilestatus, '<p>Authenticating with your WebID...<core-icon icon="done" class="greencolor"></core-icon></p>');
+                  window.scrollTo(0,document.body.scrollHeight);
+                }
+                finishAccount(user, account, dom);
+              } else {
+                // Auth failed
+                if (dom) {
+                  d.appendElement(d.$.profilestatus, '<p>Authentication failed. Try using the <a href="https://auth.my-profile.eu/auth/index.php?verbose=on" target="_blank">debugger</a> to find the cause.</p>');
+                  window.scrollTo(0,document.body.scrollHeight);
+                }
+              }
+            }
+          } else {
+            console.log("Could not authenticate "+webid);
+          }
+        }
+      };
+    };
+
+
+    // Finish setting up the account
+    // string WebID   (https://user.rww.io/profile/card#me)
+    // string account (https://user.rww.io/)
+    // bool   dom     (append info to dom)
+    function finishAccount(webid, account, dom) {
+      if (dom) {
+        var d = document.querySelector("webid-signup");
+        d.$.finishlogin.hidden = true;
+      }
+
+      var wsCount = { counter: 0,
+                      webid: webid,
+                      account: account
+                    };
+
+      workspaces.forEach(function(ws) {
+        if (dom) {
+          d.appendElement(d.$.profilestatus, '<p id="'+ws+'" hidden>Creating default workspace: <em>'+
+            ws+'</em>...<core-icon id="done'+ws+
+            '" icon="done" class="greencolor" hidden></core-icon></p><p id="acl'+
+            ws+'" hidden>Setting ACLs for '+ws+'...<core-icon id="acldone'+ws+'" icon="done" class="greencolor"></core-icon></p>');
+          window.scrollTo(0,document.body.scrollHeight);
+        }
+        createWS(ws, wsCount, webid, account, dom);
+      });
+    };
+
+    // Set acls for a given resource
+    // string uri    (https://user.rww.io/Friends/)
+    // string aclURI (https://user.rww.io/Friends/,acl)
+    // string WebID  (https://user.rww.io/profile/card#me)
+    // bool   dom    (append info to dom)
+    function setACL(uri, aclURI, webid, ws, dom) {
+      if (dom) {
+        var d = document.querySelector("webid-signup");
+        d.$.profilestatus.querySelector('#acl'+ws).hidden = false;
+      }
+
+      var g = new $rdf.graph();
+
+      // Owner ACLs
+      g.add($rdf.sym("#owner"), RDF("type"), WAC('Authorization'));
+      g.add($rdf.sym("#owner"), WAC("accessTo"), $rdf.sym(uri));
+      g.add($rdf.sym("#owner"), WAC("accessTo"), $rdf.sym(aclURI));
+      g.add($rdf.sym("#owner"), WAC("agent"), $rdf.sym(webid));
+      g.add($rdf.sym("#owner"), WAC("defaultForNew"), $rdf.sym(uri));
+      g.add($rdf.sym("#owner"), WAC("mode"), WAC('Read'));
+      g.add($rdf.sym("#owner"), WAC("mode"), WAC('Write'));
+      g.add($rdf.sym("#owner"), WAC("mode"), WAC('Control'));
+
+      if (ws == 'Public') {
+        g.add($rdf.sym("#"+ws), RDF("type"), WAC('Authorization'));
+        g.add($rdf.sym("#"+ws), WAC("accessTo"), $rdf.sym(uri));
+        g.add($rdf.sym("#"+ws), WAC("agentClass"), FOAF("Agent"));
+        g.add($rdf.sym("#"+ws), WAC("defaultForNew"), $rdf.sym(uri));
+        g.add($rdf.sym("#"+ws), WAC("mode"), WAC('Read'));
+        g.add($rdf.sym("#"+ws), WAC("mode"), WAC('Write'));
+      }
+      var s = new $rdf.Serializer(g).toN3(g);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("PUT", aclURI, true);
+      xhr.setRequestHeader("Content-Type", "text/turtle");
+      xhr.withCredentials = true;
+      xhr.send(s);
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == xhr.DONE) {
+          if (xhr.status == 200 || xhr.status == 201) {
+            if (dom) {
+              d.$.profilestatus.querySelector('#acldone'+ws).hidden = false;
+              window.scrollTo(0,document.body.scrollHeight);
+            }
+          } else {
+            console.log("Could not write ACL "+aclURI+" | HTTP status: "+xhr.status);
+          }
+        }
+      };
+    };
+
+    // Create a new workspace
+    // string ws      (workspace name -- e.g. Friends)
+    // object wsCount (workspace counter object)
+    // string WebID   (https://user.rww.io/profile/card#me)
+    // string account (https://user.rww.io/)
+    // bool   dom     (append info to dom)
+    function createWS(ws, wsCount, webid, account, dom) {
+      if (dom) {
+        var d = document.querySelector("webid-signup");
+        d.$.profilestatus.querySelector('#'+ws).hidden = false;
+      }
+
+      var uri = account+ws+'/';
+      var xhr = new XMLHttpRequest();
+      xhr.open("PUT", uri, true);
+      xhr.setRequestHeader("Content-Type", "text/turtle");
+      xhr.setRequestHeader("Link", '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"');
+      xhr.withCredentials = true;
+      xhr.send();
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == xhr.DONE) {
+          if (xhr.status == 200 || xhr.status == 201) {
+            var acl = parseLinkHeader(xhr.getResponseHeader('Link'));
+            var aclURI = acl['acl']['href'];
+            setACL(uri, aclURI, webid, ws, dom);
+            if (dom) {
+              d.$.profilestatus.querySelector('#done'+ws).hidden = false;
+              window.scrollTo(0,document.body.scrollHeight);
+            }
+            wsCount.counter++;
+            console.log("Workspaces done: "+workspaces.length);
+            if (wsCount.counter == workspaces.length) {
+              console.log("Creating prefs");
+              createPref(wsCount.webid, wsCount.account, dom);
+            }
+          } else {
+            console.log("Could not create "+ws+" | HTTP status: "+xhr.status);
+          }
+        }
+      };
+    };
+
+    // Create the preferences file
+    // string WebID   (https://user.rww.io/profile/card#me)
+    // string account (https://user.rww.io/)
+    // bool   dom     (append info to dom)
+    function createPref(webid, account, dom) {
+      console.log("Creating preferences");
+
+      var exists = false;
+      if (dom) {
+        var d = document.querySelector("webid-signup");
+        d.appendElement(d.$.profilestatus, '<p>Updating preferences file...<core-icon id="prefdone" icon="done" class="greencolor" hidden></core-icon></p>');
+        if (d.$.haveWebID && d.$.haveWebID.checked) {
+          exists = true;
+        }
+      }
+
+      var g = new $rdf.graph();
+      if (!exists) {
+        g.add($rdf.sym(webid), WS('preferencesFile'), $rdf.sym(''));  
+      }
+      workspaces.forEach(function(workspace) {
+        var wsURI = account+workspace+'/';
+        // add triples for each workspace
+        g.add($rdf.sym(account+workspace+'/'), DCT('title'), $rdf.lit(workspace+' workspace'));
+        g.add($rdf.sym(account+workspace+'/'), RDF('type'), WS('Workspace'));
+        if (workspace == 'Preferences') {
+          g.add($rdf.sym(account+workspace+'/'), RDF('type'), WS('PreferencesWorkspace'));
+        }
+        // add to list of workspaces
+        g.add($rdf.sym(webid), WS('workspace'), $rdf.sym(wsURI));
+      });
+      
+      var prefURI = account+'Preferences/prefs';
+      var s = new $rdf.Serializer(g).toN3(g);
+
+      if (exists) {
+        // fetch profile and append to preferences graph
+        var kb = new $rdf.graph();
+        var kf = new $rdf.fetcher(kb, TIMEOUT);
+        var docURI = webid.slice(0, webid.indexOf('#'));
+
+        kf.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
+          if (!ok) {
+            console.log("Could not load profile: HTTP "+xhr.status);
+          } else {
+            p = kb.any($rdf.sym(webid), WS('preferencesFile'));
+            if (p && p.value.length > 0) {
+              prefURI = p.value;
+              // fetch preferences file from profile
+              pg = new $rdf.graph();
+              var f = new $rdf.fetcher(pg, TIMEOUT);
+              f.nowOrWhenFetched(prefURI,undefined,function(ok, body, xhr) {
+                var triples = pg.statementsMatching(undefined, undefined, undefined, $rdf.sym(prefURI));
+                // add existing triples from pref file
+                triples.forEach(function(st) {
+                  g.addStatement(st);
+                });
+                s = new $rdf.Serializer(g).toN3(g);
+                writePref(webid, prefURI, s, exists, account, dom);
+              });
+            } else {
+              writePref(webid, prefURI, s, exists, account, dom);
+            }
+          }
+        });
+      } else {
+        writePref(webid, prefURI, s, exists, account, dom);
+      }
+    }
+
+    // update WebID profile to include the preferences file
+    // string WebID   (https://user.rww.io/profile/card#me)
+    // string prefURI (https://user.rww.io/Preferences/prefs)
+    // bool   dom     (append info to dom)
+    function writePref(webid, prefURI, graph, exists, account, dom) {
+      if (dom) {
+        var d = document.querySelector("webid-signup");    
+      }
+      var xhr = new XMLHttpRequest();
+      xhr.open("PUT", prefURI, true);
+      xhr.setRequestHeader("Content-Type", "text/turtle");
+      xhr.withCredentials = true;
+      xhr.send(graph);
+
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == xhr.DONE) {
+          if (xhr.status == 200 || xhr.status == 201) {
+              if (exists) {
+                if (dom) {
+                  d.$.profilestatus.querySelector('#prefdone').hidden = false;
+                  d.$.alldone.hidden = false;
+                  window.scrollTo(0,document.body.scrollHeight);
+                }
+              } else {
+                updateProfile(webid, prefURI, account, dom);
+              }
+          } else {
+            console.log("Could not write pref file "+account+"Preferences/prefs | HTTP status: "+xhr.status);
+          }
+        }
+      };
+    };
+
+    // update WebID profile to include the preferences file
+    // string WebID   (https://user.rww.io/profile/card#me)
+    // string prefURI (https://user.rww.io/Preferences/prefs)
+    // bool   dom     (append info to dom)
+    function updateProfile(webid, prefURI, account, dom) {
+      if (dom) {
+        var d = document.querySelector("webid-signup");
+        d.appendElement(d.$.profilestatus, '<p>Updating WebID profile...<core-icon id="profdone" icon="done" class="greencolor" hidden></core-icon></p>');
+      }
+
+      var g = new $rdf.graph();
+      var kb = new $rdf.graph();
+      var f = new $rdf.fetcher(kb, TIMEOUT);
+      var docURI = webid.slice(0, webid.indexOf('#'));
+
+      f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
+        if (ok) {
+          var triples = kb.statementsMatching(undefined, undefined, undefined, $rdf.sym(docURI));
+          // add existing triples from profile
+          triples.forEach(function(st) {
+            g.addStatement(st);
+          });
+          // add link to preference file
+          g.add($rdf.sym(webid), WS('preferencesFile'), $rdf.sym(prefURI));
+          g.add($rdf.sym(webid), WS('storage'), $rdf.sym(account));
+          var s = new $rdf.Serializer(g).toN3(g);
+
+          // update profile
+          var xhr = new XMLHttpRequest();
+          xhr.open("PUT", docURI, true);
+          xhr.setRequestHeader("Content-Type", "text/turtle");
+          xhr.withCredentials = true;
+          xhr.send(s);
+
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState == xhr.DONE) {
+              if (xhr.status == 200 || xhr.status == 201) {
+                if (dom) {
+                  d.$.profilestatus.querySelector('#profdone').hidden = false;
+                  d.$.alldone.hidden = false;
+                  window.scrollTo(0,document.body.scrollHeight);
+                }
+              } else {
+                console.log("Could not write profile file "+docURI+" | HTTP status: "+xhr.status);
+              }
+            }
+          };
+        }
+      });
+    };
+
+    // helper function used by the Link header parser
+    function unquote(value) {
+      if (value.charAt(0) == '"' && value.charAt(value.length - 1) == '"') return value.substring(1, value.length - 1);
+      return value;
+    };
+
+    // parse a Link header
+    function parseLinkHeader(header) {
+      var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g;
+      var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g;
+
+      var matches = header.match(linkexp);
+      var rels = new Object();
+      for (i = 0; i < matches.length; i++) {
+        var split = matches[i].split('>');
+        var href = split[0].substring(1);
+        var ps = split[1];
+        var link = new Object();
+        link.href = href;
+        var s = ps.match(paramexp);
+        for (j = 0; j < s.length; j++) {
+          var p = s[j];
+          var paramsplit = p.split('=');
+          var name = paramsplit[0];
+          link[name] = unquote(paramsplit[1]);
+        }
+
+        if (link.rel != undefined) {
+          rels[link.rel] = link;
+        }
+      }   
+      return rels;
+    };
+  </script>
+</polymer-element>

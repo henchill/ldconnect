@@ -1,0 +1,25 @@
+{
+  "name": "webid-login",
+  "version": "0.0.4",
+  "homepage": "https://github.com/linkeddata/webid-login",
+  "authors": [
+    "Andrei Sambra <andrei@w3.org>"
+  ],
+  "description": "WebID login widget",
+  "license": "MIT",
+  "keywords": "webid, polymer, web-components",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "font-roboto": "Polymer/font-roboto#^0.5.0",
+    "core-ajax": "Polymer/core-ajax#^0.5.0",
+    "paper-button": "Polymer/paper-button#~0.5.2"
+  }
+}

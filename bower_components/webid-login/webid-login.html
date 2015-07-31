@@ -1,0 +1,85 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../core-ajax/core-ajax.html">
+<link rel="import" href="../paper-button/paper-button.html">
+
+<polymer-element name="webid-login">
+  <template>
+    <style>
+    core-icon-button {
+      color: #3e50b4;
+    }
+    paper-button.colored {
+      background: #4285f4;
+      color: #fff;
+    }
+    </style>
+
+    <!-- Should use a list of login endpoints instead -->
+    <core-ajax id="ajaxLogin" url="https://databox.me/" on-core-response="{{ajaxLoginResponse}}"></core-ajax>
+    <div horizontal center-justified layout>
+      <paper-button id="loginButton" raised="" class="colored" role="button" tabindex="0" on-tap="{{doLogin}}" center>Authenticate with WebID</paper-button>
+    </div>
+  </template>
+  <script>
+  Polymer({
+    ajaxLoginResponse: function(e, r) {
+      var user = r.xhr.getResponseHeader('User'); // look for User: header
+      if (user) {
+        // auth object
+        var authData = {
+          "auth": "WebID-TLS",
+          "success": false
+        };
+        // got a WebID
+        if (user.substr(0, 4) === 'http') {
+          authData.success = true;
+          authData.user = user;
+          this.$.loginButton.innerHTML = "Authenticated";
+          console.log("Authenticated as "+user);
+        } else {
+          // Auth failed
+          this.$.loginButton.innerHTML = "Authenticate with WebID";
+          console.log("Authentication failed: HTTP "+r.xhr.status);
+        }
+
+        // legacy postMessage way
+        if (this.getParam('ref').length > 0) {
+          parent.postMessage('User:'+user, this.getParam('ref')); // pass WebID to the parent window
+          parent.postMessage('Close', this.getParam('ref')); // signal to close the modal
+        }
+        // create and send event to parent window (also to escape shadowDOM)
+        try {
+          var evt = new CustomEvent("WebIDAuth", {"detail": authData});
+          parent.window.dispatchEvent(evt);
+        } catch (e) {
+          // silent drop for dispatchEvent errors due to CORS
+        }
+      } else {
+        this.$.loginButton.innerHTML = "Authenticate with WebID";
+        console.log("Authentication failed: HTTP "+r.xhr.status);
+      }
+    },
+    doLogin: function() {
+      // var l = document.querySelector("webid-login");
+      this.$.loginButton.innerHTML = "Authenticating..."
+
+      var ajax = this.$.ajaxLogin;
+      ajax.method = 'HEAD';
+      ajax.headers = '{"Accept": "*/*"}';
+      ajax.withCredentials = true;
+      ajax.go(); // call the API
+    },
+    getParam: function(name) {
+      name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+      var regexS = "[\\?&]"+name+"=([^&#]*)";
+      var regex = new RegExp(regexS);
+      var results = regex.exec(window.location.href);
+      if( results == null ) {
+        return "";
+      } else {
+        return decodeURIComponent(results[1]);
+      }
+    }
+  });
+  </script>
+</polymer-element>

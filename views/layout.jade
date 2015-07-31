@@ -1,0 +1,25 @@
+doctype html
+html
+	head
+		title= title
+		link(rel='stylesheet', href='/css/style.css')
+		script(src="/bower_components/webcomponentsjs/webcomponents.min.js")
+		script(src='/bower_components/jquery/dist/jquery.js')
+		script(src='/bower_components/bootstrap/dist/js/bootstrap.js')
+		link(rel='stylesheet', href='/bower_components/bootstrap/dist/css/bootstrap.css')
+
+	block extra_headers
+	body
+		nav(class='navbar navbar-default navbar-fixed-top')
+			.container-fluid
+				.navbar-header
+					a(class='navbar-brand', href='/') LDConnect
+				.collapse.navbar-collapse
+					ul(class='nav navbar-nav navbar-right')
+						if (!webid)
+							a(href="/signup", class="btn btn-default navbar-btn", id="signup-btn") Signup
+		.container
+			.row
+				div(class="col-md-12" id="error-message" hidden)
+					block message
+			block content

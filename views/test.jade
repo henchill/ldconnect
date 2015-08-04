@@ -16,13 +16,11 @@ block content
 					li: a(data-toggle="tab", href="#imgtab") Upload Image
 					li: a(data-toggle="tab", href="#commenttab") Add Comment
 					li: a(data-toggle="tab", href="#liketab") Like Object
+					li: a(data-toggle="tab", href="#albumtab") Add Album
 
 				.tab-content
 					.tab-pane.fade.in.active(id="posttab")
 						h3 Create a Post
-						.form-group
-							label(for="pnote") Note:
-							input.form-control(type="text", name="pnote", id="postnote")
 						.form-group
 							label(for="pattachment") Attachment: 
 							input.form-control(type="text", name="pattachment", id="postattach")
@@ -35,6 +33,9 @@ block content
 						.form-group
 							label(for="source") Source:
 							input.form-control(type="text", name="source", id="imgsource")
+						.form-group
+							label(for="imgcontent") Caption:
+							textarea.form-control(rows="2", name="imgcontent", id="imgcontent")
 						button.btn.btn-default(type="submit", id="submitimg") Submit
 					.tab-pane.fade(id="commenttab")
 						h3 Comment on Resource
@@ -48,5 +49,15 @@ block content
 					.tab-pane.fade(id="liketab")
 						h3 Like a Resource
 						button.btn.btn-default(type="submit", id="submitlike") Submit
+					.tab-pane.fade(id="albumtab") 
+						h3 Create an Album
+						.form-group
+							label(for="aname") Name: 
+							input.form-control(type="text", name="aname", id="albumname")
+						.form-group
+							label(for="adesc") Description:
+							textarea.form-control(rows="3", name="adesc", id="albumdesc")
+						button.btn.btn-default(type="submit", id="submitalbum") Submit
+
 
 	script(type='text/javascript', src="/js/test.js")

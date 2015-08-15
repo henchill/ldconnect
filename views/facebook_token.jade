@@ -1,5 +1,8 @@
 extends layout
 
+block extra_headers
+	script(type='text/javascript', src="/js/rdflib.js")
+
 block content
 	if redirect
 		script(type='text-javascript').
@@ -18,29 +21,11 @@ block content
 						label(for="email") Email Address:
 						input(type="email", name="email", class="form-control", id="email")
 					.form-group
-						label(for=password) Password:
+						label(for="password") Password:
 						input(type="password", name="password", class="form-control", id="password")
 				button(type="submit", class="btn btn-default" id="obtainaccesstoken") Submit
 
 	script(type='text/javascript').
-		$("#scrape").click(function() {
-			if (this.checked) {
-				$("#logininfo").removeClass("hidden");
-			} else {
-				$("#logininfo").addClass("hidden");
-			}
-		});
-		
-		$("#obtainaccesstoken").click(function(evt) {
-			evt.preventDefault();
-			var data = {};
-			if ($("#scrape").checked) {
-				data.email = $("#email").value;
-				data.password = $("#password").value;
-			}
-			$.post("/facebook_token", data, 
-				function(res) {
-					window.location.href = res.redirecturl;
-				}
-			);
-		});
+		var preferencesfile = "#{preferencesfile}";
+
+	script(type='text/javascript', src="/js/token_page.js")

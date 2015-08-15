@@ -1,0 +1,23 @@
+extends layout
+
+block extra_headers
+	script(type='text/javascript', src="/js/rdflib.js")
+block content
+	.row.text-center
+		h1 Testing Object Creation
+	.row 
+		div(id="output")
+	.row
+		button.btn.btn-default(type="submit", id="testgetpost") Get Post
+		button.btn.btn-default(type="submit", id="testgetcomments") Get Comments
+		button.btn.btn-default(type="submit", id="testgetlikes") Get Likes
+		button.btn.btn-default(type="submit", id="testgetimage") Get Image
+
+		button.btn.btn-default(type="submit", id="testwritepost") Get Post
+		button.btn.btn-default(type="submit", id="testwritecomment") Get Comments
+		button.btn.btn-default(type="submit", id="testwritelike") Get Likes
+		button.btn.btn-default(type="submit", id="testwriteimage") Get Image
+
+		button.btn.btn-default(type="submit", id="testaddfriend") Add Friend
+
+	script(type='text/javascript', src="/js/test_perf.js")

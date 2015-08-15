@@ -5,7 +5,11 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var https = require("https");
+var fs = require("fs");
+
 var routes = require('./routes/main');
+var constants = require("./lib/constants.js");
 
 var app = express();
 
@@ -38,13 +42,13 @@ app.use(function(req, res, next) {
 	next(err);
 });
 
-app.use(function(req, res, next) {
-	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-	res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-	res.setHeader('Access-Control-Allow-Credentials', true);
-	next();
-});
+// app.use(function(req, res, next) {
+// 	res.setHeader("Access-Control-Allow-Origin", "*");
+// 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+// 	res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+// 	res.setHeader('Access-Control-Allow-Credentials', true);
+// 	next();
+// });
 
 // error handlers
 

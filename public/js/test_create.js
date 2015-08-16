@@ -8,7 +8,7 @@ var XSD = $rdf.Namespace("http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt
 var CONTACT = $rdf.Namespace("http://www.w3.org/2000/10/swap/pim/contact#")
 var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
 var DCTYPE = $rdf.Namespace("http://purl.org/dc/dcmitype/");
-var LDFB = $rdf.Namespace("http://henchill.databox.me/fb#");
+var LDFB = $rdf.Namespace("https://henchill.databox.me/fb#");
 
 var BASEURL = "http://local.happynchill.com/";
 
@@ -219,6 +219,52 @@ $("#submitalbum").click(function(evt) {
 		error: function(xhr, status, error) {
 			$("#submitalbum").prop("disabled", false);
 			alert("failed to create album: " + error);
+		}
+	});
+});
+
+$("#submitfriend").click(function(evt) {
+	evt.preventDefault();
+
+	$("#submitfriend").prop("disabled", true);
+
+	if ($("#endpoint").val() === "") {
+		$("#submitfriend").prop("disabled", false);
+		alert("Please specify an endpoint");
+		return;
+	}
+
+	var endpoint = $("#endpoint").val()
+	var kb = $rdf.graph();
+	
+
+	if ($("#fbid").val() !== "") {
+		kb.add($rdf.sym("_:"), LDFB("has_friend"), $rdf.sym("#user_" + $("#fbid").val()));
+	} else {
+		$("#submitfriend").prop("disabled", false);
+		alert("Must specify facebook id");
+		return;
+	}
+
+	var s = new $rdf.Serializer(kb).toN3(kb);
+	console.log(s);
+	
+	$.ajax({
+		url: endpoint,
+		type: "POST",
+		contentType: "text/turtle;charset=utf-8",
+		data: s,
+		processData: false,
+		success: function(res, status, xhr) {
+			console.log(res);
+			console.log(xhr.getAllResponseHeaders());
+			$("#submitfriend").prop("disabled", false);
+			alert("successfully added friend");
+
+		},
+		error: function(xhr, status, error) {
+			$("#submitfriend").prop("disabled", false);
+			alert("failed to add friend: " + error);
 		}
 	});
 });

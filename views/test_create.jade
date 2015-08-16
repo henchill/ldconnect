@@ -17,6 +17,7 @@ block content
 					li: a(data-toggle="tab", href="#commenttab") Add Comment
 					li: a(data-toggle="tab", href="#liketab") Like Object
 					li: a(data-toggle="tab", href="#albumtab") Add Album
+					li: a(data-toggle="tab", href="#friendtab") Add Friend
 
 				.tab-content
 					.tab-pane.fade.in.active(id="posttab")
@@ -58,6 +59,12 @@ block content
 							label(for="adesc") Description:
 							textarea.form-control(rows="3", name="adesc", id="albumdesc")
 						button.btn.btn-default(type="submit", id="submitalbum") Submit
+					.tab-pane.fade(id="friendtab") 
+						h3 Add a Friend
+						.form-group
+							label(for="fbid") Facebook ID: 
+							input.form-control(type="text", name="fbid", id="fbid")
+						button.btn.btn-default(type="submit", id="submitfriend") Submit
 
 
 	script(type='text/javascript', src="/js/test_create.js")

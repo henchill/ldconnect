@@ -4,20 +4,19 @@ block extra_headers
 	script(type='text/javascript', src="/js/rdflib.js")
 block content
 	.row.text-center
-		h1 Testing Object Creation
+		h1 Testing Performance
 	.row 
 		div(id="output")
 	.row
-		button.btn.btn-default(type="submit", id="testgetpost") Get Post
-		button.btn.btn-default(type="submit", id="testgetcomments") Get Comments
-		button.btn.btn-default(type="submit", id="testgetlikes") Get Likes
-		button.btn.btn-default(type="submit", id="testgetimage") Get Image
+		button.btn.btn-default(id="testgetposts") Get Posts
+		button.btn.btn-default(id="testgetcomments") Get Comments
+		button.btn.btn-default(id="testgetlikes") Get Likes
+		button.btn.btn-default(id="testgetalbums") Get Albums
+		button.btn.btn-default(id="testgetalbum") Get Album
 
-		button.btn.btn-default(type="submit", id="testwritepost") Get Post
-		button.btn.btn-default(type="submit", id="testwritecomment") Get Comments
-		button.btn.btn-default(type="submit", id="testwritelike") Get Likes
-		button.btn.btn-default(type="submit", id="testwriteimage") Get Image
+		button.btn.btn-default(id="testwritepost") Get Post
+		button.btn.btn-default(id="testwriteimage") Get Image
 
-		button.btn.btn-default(type="submit", id="testaddfriend") Add Friend
+		button.btn.btn-default(id="testaddfriend") Add Friend
 
 	script(type='text/javascript', src="/js/test_perf.js")

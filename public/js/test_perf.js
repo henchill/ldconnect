@@ -1,4 +1,5 @@
 var access_token = "CAAU0Fg3jo8oBAGeMV4u6RaQbFnFrKZC8dUDqGZBuJP27nHPknFJyfREOQcLrF4ZCFLFQaTnZAZA585HfCgmuIq9vFwADteDb7PZBsrzSxVjYRZCZBeOqRWPz8gkNo2PWLkNoJP5CA8sOTbEDn6lAPUKczeho4l9082VbFFz9bXTf706xIS9Vav30tCAZA9wKvUcAZD";
+var access_token2 = "CAAU0Fg3jo8oBABjAnUh5pvO8hpaiSwv5zH6TOnjYzozZAHOv2i0fq8FRZCjpNbPFpGoX1h3tqQMVgpjNWIMM8ZBbqUX5a3dB33wzFBHZAeVVlP0e52Dmvhs20GdYClnCbZBZA9S8wl84EUCnRRBPI0MdZCPGUEZC8UL5YZCztGnFZCt2JUTdGHIIs8Msx9Xs4ILOYZD";
 var results = {}
 
 var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/")
@@ -13,9 +14,7 @@ var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
 var DCTYPE = $rdf.Namespace("http://purl.org/dc/dcmitype/");
 var LDFB = $rdf.Namespace("https://henchill.databox.me/fb#");
 
-var showoutput = function(start, end, name) {
-
-}
+var counter = 1000;
 
 var getPostsViaFacebook = function(results, test) {
 	var uri = "https://graph.facebook.com/me/feed?access_token=" + access_token;
@@ -59,9 +58,10 @@ var getPostsViaLDConnect = function(results, test) {
 	});
 }
 
-var sendFacebookRequest = function(results, path, params, method, test, data) {
+var sendFacebookRequest = function(results, path, params, method, test, testuser) {
 	var start = new Date();
-	var uri = "https://graph.facebook.com/v2.4/" + path + "?access_token=" + access_token; 
+	var acc = testuser ? access_token2:access_token;
+	var uri = "https://graph.facebook.com/v2.4/" + path + "?access_token=" + acc; 
 	if (params) {
 		uri += ("&" + params);
 	}
@@ -81,10 +81,16 @@ var sendFacebookRequest = function(results, path, params, method, test, data) {
 	});
 }
 
-var sendLDConnectRequest = function(results, path, method, test, data) {
+var sendLDConnectRequest = function(results, path, method, test, data, testuser) {
 	var start = new Date();
-	var uri = "https://he1.crosscloud.org:3001/me/" + path;
+	var base;
+	if (testuser) {
+		base = "https://he1.crosscloud.org:3001/ldconnect_test1/";
+	} else {
+		base = "https://he1.crosscloud.org:3001/me/";
+	}
 
+	var uri = base + path;
 	$.ajax({
 		url: uri,
 		type: method,
@@ -179,46 +185,75 @@ $("#testgetimage").click(function(evt) {
 
 $("#testwritepost").click(function(evt) {
 	console.log("test write post");
+	var data = {
+		message: "Post " + counter,
+		link: "http://img.wikinut.com/img/14val6dt214m14om/jpeg/0/Facebook.jpeg"
+	}
+
 	evt.preventDefault();
 	var kb = $rdf.graph();
 	kb.add($rdf.sym(""), RDF("type"), SIOC("Post"));
-	kb.add($rdf.sym(""), SIOC("attachment"), $rdf.lit("http://img.wikinut.com/img/14val6dt214m14om/jpeg/0/Facebook.jpeg"));
-	kb.add($rdf.sym(""), SIOC("content"), $rdf.lit("Post 1"));
+	kb.add($rdf.sym(""), SIOC("attachment"), $rdf.lit(data.link));
+	kb.add($rdf.sym(""), SIOC("content"), $rdf.lit(data.message));
 
 	var s = new $rdf.Serializer(kb).toN3(kb);
-
-	sendLDConnectRequest(results, "posts/", "POST", "writePost", s);
-	sendFacebookRequest(results, photoid, "fields=id,name,from,picture,album,created_time", "GET", "getImage");
+	results["writePost"] = {};
+	sendLDConnectRequest(results, "posts/", "POST", "writePost", s, true);
+	sendFacebookRequest(results, "me/feed", $.param(data), "POST", "writePost", true);
 });
 
 $("#testwritecomment").click(function(evt) {
 	console.log("test write comment");
 	evt.preventDefault();
+
+	var data = {
+		message: "Comment " + counter,
+		attachment_url: "http://img.wikinut.com/img/14val6dt214m14om/jpeg/0/Facebook.jpeg"
+	}
+
+	var postid = "102751230077034_102751256743698";
+
 	var kb = $rdf.graph();
 	kb.add($rdf.sym(""), RDF("type"), SIOC("Post"));
-	kb.add($rdf.sym(""), SIOC("attachment"), $rdf.lit("http://img.wikinut.com/img/14val6dt214m14om/jpeg/0/Facebook.jpeg"));
-	kb.add($rdf.sym(""), SIOC("content"), $rdf.lit("Comment 1"));
+	kb.add($rdf.sym(""), SIOC("attachment"), $rdf.lit(data.attachment_url));
+	kb.add($rdf.sym(""), SIOC("content"), $rdf.lit(data.message));
 
 	var s = new $rdf.Serializer(kb).toN3(kb);
 	
-	sendLDConnectRequest(results, "albums/" +albumid+"/"+photoid, "GET", "getImage");
-	sendFacebookRequest(results, photoid, "fields=id,name,from,picture,album,created_time", "GET", "getImage");
+	sendLDConnectRequest(results, "posts/" +postid+"/comments_"+postid, "POST", "writeComment", s, true);
+	sendFacebookRequest(results, postid + "/comments", $.param(data), "POST", "writeComment", true);
 });
 
-$("#testwriteimage").click(function(evt) {
+$("#testuploadimage").click(function(evt) {
 	console.log("test upload image");
 	evt.preventDefault();
+
+	var data = {
+		url: "https://gun.io/static/uploads/HTML%3ACSS3.jpg",
+		caption: "HTML5CSS3 " + counter
+	}
+
+	var albumid = "104167583268732";
+
 	var kb = $rdf.graph();
 	kb.add($rdf.sym(""), RDF("type"), DCTYPE("Image"));
-	kb.add($rdf.sym(""), DCT("source"), $rdf.lit("https://gun.io/static/uploads/HTML%3ACSS3.jpg"));
-	kb.add($rdf.sym(""), DCT("title"), $rdf.lit("HTML5CSS3"));
+	kb.add($rdf.sym(""), DCT("source"), $rdf.lit(data.url));
+	kb.add($rdf.sym(""), DCT("title"), $rdf.lit(data.caption));
 	
 	var s = new $rdf.Serializer(kb).toN3(kb);
+	sendLDConnectRequest(results, "albums/" +albumid+"/", "POST", "writeimage", s, true);
+	sendFacebookRequest(results, albumid + "/photos", $.param(data), "POST", "writeimage", true);
 });
 
 $("#testcreatealbum").click(function(evt) {
 	console.log("test create album");
 	evt.preventDefault();
+
+	var data = {
+		message: "album message " + counter,
+		name: "Album " + counter
+	}
+
 	var kb = $rdf.graph();
 	kb.add($rdf.sym(""), RDF("type"), SIOC("Container"));
 	kb.add($rdf.sym(""), DCT("title"), $rdf.lit("Album 1"));
@@ -227,7 +262,8 @@ $("#testcreatealbum").click(function(evt) {
 	var s = new $rdf.Serializer(kb).toN3(kb);
 
 	results["addalbum"] = {};
-	sendLDConnectRequest(results, "albums/", "POST", "addalbum", s);
+	sendLDConnectRequest(results, "albums/", "POST", "addalbum", s, true);
+	sendFacebookRequest(results, "albums", $.param(data), "POST", "addalbum",true);
 });
 
 $("#testaddfriend").click(function(evt) {

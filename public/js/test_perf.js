@@ -48,8 +48,8 @@ var getPostsViaLDConnect = function(results, test) {
 			var end = new Date();
 			var diff = end - start;
 			results[test]["ldconnect"] = diff;
-			console.log("Time for get posts ldconnect");
-			console.log(diff);
+			// console.log("Time for get posts ldconnect");
+			// console.log(diff);
 			// alert("successfully created post");
 		},
 		error: function(xhr, status, error) {
@@ -60,7 +60,7 @@ var getPostsViaLDConnect = function(results, test) {
 
 var sendFacebookRequest = function(results, path, params, method, test, testuser) {
 	var start = new Date();
-	var acc = testuser ? access_token2:access_token;
+	var acc = access_token; //testuser ? access_token2:access_token;
 	var uri = "https://graph.facebook.com/v2.4/" + path + "?access_token=" + acc; 
 	if (params) {
 		uri += ("&" + params);
@@ -72,8 +72,8 @@ var sendFacebookRequest = function(results, path, params, method, test, testuser
 		success: function() {
 			var end = new Date();
 			var diff = end - start;
-			results[test]["facebook"] = diff;
-			console.log(test + " facebook: " + diff);
+			results[counter][test]["facebook"] = diff;
+			// console.log(test + " facebook: " + diff);
 		},
 		error: function() {
 			alert("failed facebook req");
@@ -85,7 +85,8 @@ var sendLDConnectRequest = function(results, path, method, test, data, testuser)
 	var start = new Date();
 	var base;
 	if (testuser) {
-		base = "https://he1.crosscloud.org:3001/ldconnect_test1/";
+		// base = "https://he1.crosscloud.org:3001/ldconnect_test1/";
+		base = "https://he1.crosscloud.org:3001/me/";
 	} else {
 		base = "https://he1.crosscloud.org:3001/me/";
 	}
@@ -100,7 +101,7 @@ var sendLDConnectRequest = function(results, path, method, test, data, testuser)
 		success: function() {
 			var end = new Date();
 			var diff = end - start;
-			results[test]["ldconnect"] = diff;
+			results[counter][test]["ldconnect"] = diff;
 			console.log(test + " ldconnect: " + diff);
 		},
 		error: function(a, b, c) {
@@ -197,7 +198,7 @@ $("#testwritepost").click(function(evt) {
 	kb.add($rdf.sym(""), SIOC("content"), $rdf.lit(data.message));
 
 	var s = new $rdf.Serializer(kb).toN3(kb);
-	results["writePost"] = {};
+	results[counter]["writePost"] = {};
 	sendLDConnectRequest(results, "posts/", "POST", "writePost", s, true);
 	sendFacebookRequest(results, "me/feed", $.param(data), "POST", "writePost", true);
 });
@@ -211,7 +212,7 @@ $("#testwritecomment").click(function(evt) {
 		attachment_url: "http://img.wikinut.com/img/14val6dt214m14om/jpeg/0/Facebook.jpeg"
 	}
 
-	var postid = "102751230077034_102751256743698";
+	var postid = "102751230077034_103851453300345";
 
 	var kb = $rdf.graph();
 	kb.add($rdf.sym(""), RDF("type"), SIOC("Post"));
@@ -220,6 +221,7 @@ $("#testwritecomment").click(function(evt) {
 
 	var s = new $rdf.Serializer(kb).toN3(kb);
 	
+	results[counter]["writeComment"] = {};
 	sendLDConnectRequest(results, "posts/" +postid+"/comments_"+postid, "POST", "writeComment", s, true);
 	sendFacebookRequest(results, postid + "/comments", $.param(data), "POST", "writeComment", true);
 });
@@ -241,6 +243,7 @@ $("#testuploadimage").click(function(evt) {
 	kb.add($rdf.sym(""), DCT("title"), $rdf.lit(data.caption));
 	
 	var s = new $rdf.Serializer(kb).toN3(kb);
+	results[counter]["writeimage"] = {};
 	sendLDConnectRequest(results, "albums/" +albumid+"/", "POST", "writeimage", s, true);
 	sendFacebookRequest(results, albumid + "/photos", $.param(data), "POST", "writeimage", true);
 });
@@ -261,7 +264,7 @@ $("#testcreatealbum").click(function(evt) {
 
 	var s = new $rdf.Serializer(kb).toN3(kb);
 
-	results["addalbum"] = {};
+	results[counter]["addalbum"] = {};
 	sendLDConnectRequest(results, "albums/", "POST", "addalbum", s, true);
 	sendFacebookRequest(results, "albums", $.param(data), "POST", "addalbum",true);
 });
@@ -274,7 +277,7 @@ $("#testaddfriend").click(function(evt) {
 	kb.add($rdf.sym("_:"), LDFB("has_friend"), $rdf.sym("#user_" + "100010009322829"));
 	var s = new $rdf.Serializer(kb).toN3(kb);
 	
-	results["addfriend"] = {};
+	results[counter]["addfriend"] = {};
 	sendLDConnectRequest(results, "friends", "POST", "addfriend", s);
 });
 
@@ -294,4 +297,27 @@ $("#testget").click(function(evt) {
 	setInterval(function() {
 		console.log(JSON.stringify(results)); 
 	}, 5000);
+});
+
+$("#testwrite").click(function(evt) {
+	for (var i = 0; i < 1; i++) {
+		counter = i;
+		results[counter] = {};
+		$("#testuploadimage").click();
+		$("#testcreatealbum").click();
+		$("#testwritecomment").click();
+		$("#testwritepost").click();
+
+		var start = new Date(); 
+		var end = new Date();
+		while (end - start < 5000) {
+			var end = new Date();
+		}
+		console.log(JSON.stringify(results[counter]));
+		// setTimeout(function() {
+		// 	console.log(results);
+		// }, 5000);
+
+	}
+	console.log(JSON.stringify(results));
 });
